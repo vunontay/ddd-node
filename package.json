@@ -1,6 +1,6 @@
 {
-  "name": "@vunontay/ddd-node",
-  "version": "1.0.0",
+  "name": "create-ddd-app",
+  "version": "1.1.0",
   "description": "A CLI to scaffold Node.js projects with Domain-Driven Design structure",
   "license": "MIT",
   "author": "vunontay <vunontay@gmail.com>",
