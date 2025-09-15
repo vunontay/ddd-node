@@ -1,17 +1,8 @@
+// src/index.ts
 import fs from "fs";
 import path from "path";
-
-interface GeneratorOptions {
-  actions?: string[];
-  skipController?: boolean;
-  skipService?: boolean;
-  skipRepository?: boolean;
-  outputDir?: string; // Target directory for generation
-}
-
-export function generateProject(name: string) {
+function generateProject(name) {
   const baseDir = path.join(process.cwd(), name);
-
   const structure = [
     "src/domain/entities",
     "src/domain/value_objects",
@@ -31,11 +22,9 @@ export function generateProject(name: string) {
     "src/shared/utils",
     "src/shared/constants"
   ];
-
   structure.forEach((dir) => {
     fs.mkdirSync(path.join(baseDir, dir), { recursive: true });
   });
-
   const entryCandidates = [
     "src/main.ts",
     "src/app.ts",
@@ -44,9 +33,7 @@ export function generateProject(name: string) {
     "app.js",
     "index.js"
   ];
-
-  let entryFile: string | null = null;
-
+  let entryFile = null;
   for (const candidate of entryCandidates) {
     const candidatePath = path.join(baseDir, candidate);
     if (fs.existsSync(candidatePath)) {
@@ -54,29 +41,25 @@ export function generateProject(name: string) {
       break;
     }
   }
-
   if (!entryFile) {
     entryFile = path.join(baseDir, "src/main.ts");
     fs.writeFileSync(entryFile, "// entry point\n");
-    console.log(`ℹ️ No entry file found. Created default at ${entryFile}`);
+    console.log(`\u2139\uFE0F No entry file found. Created default at ${entryFile}`);
   } else {
-    console.log(`ℹ️ Found existing entry file at ${entryFile}`);
+    console.log(`\u2139\uFE0F Found existing entry file at ${entryFile}`);
   }
-
-  console.log(`✅ Project ${name} generated successfully!`);
+  console.log(`\u2705 Project ${name} generated successfully!`);
 }
-
-export function setupDDD(targetDir: string = './src') {
+function setupDDD(targetDir = "./src") {
   const resolvedDir = path.resolve(targetDir);
-  console.log(`📁 Setting up DDD structure at ${resolvedDir}`);
+  console.log(`\u{1F4C1} Setting up DDD structure at ${resolvedDir}`);
   setupDDDStructure(resolvedDir);
-  console.log(`✅ DDD structure created successfully!`);
+  console.log(`\u2705 DDD structure created successfully!`);
 }
-
-function setupDDDStructure(baseDir: string) {
+function setupDDDStructure(baseDir) {
   const structure = [
     "domain/entities",
-    "domain/value_objects", 
+    "domain/value_objects",
     "domain/repositories",
     "domain/events",
     "application/dto",
@@ -93,7 +76,6 @@ function setupDDDStructure(baseDir: string) {
     "shared/utils",
     "shared/constants"
   ];
-
   structure.forEach((dir) => {
     const fullPath = path.join(baseDir, dir);
     if (!fs.existsSync(fullPath)) {
@@ -101,8 +83,7 @@ function setupDDDStructure(baseDir: string) {
     }
   });
 }
-
-export function generateModule(moduleName: string, options: GeneratorOptions = {}) {
+function generateModule(moduleName, options = {}) {
   const {
     actions = ["index", "show", "create", "update", "destroy"],
     skipController = false,
@@ -110,82 +91,57 @@ export function generateModule(moduleName: string, options: GeneratorOptions = {
     skipRepository = false,
     outputDir
   } = options;
-
-  // Determine target directory
   const baseDir = outputDir ? path.resolve(outputDir) : process.cwd();
   const srcPath = outputDir ? baseDir : path.join(baseDir, "src");
-
-  // Check if target directory exists, if not create DDD structure
   if (!fs.existsSync(srcPath)) {
     if (outputDir) {
-      console.log(`📁 Creating DDD structure at ${srcPath}`);
+      console.log(`\u{1F4C1} Creating DDD structure at ${srcPath}`);
       setupDDDStructure(srcPath);
     } else {
-      console.log("❌ Not in a DDD project directory. Run 'create-ddd-app new <project-name>' first or specify outputDir.");
+      console.log("\u274C Not in a DDD project directory. Run 'create-ddd-app new <project-name>' first or specify outputDir.");
       return;
     }
   }
-
-  const createdFiles: string[] = [];
-
-  // 1. Generate Entity
+  const createdFiles = [];
   const entityPath = path.join(srcPath, "domain/entities", `${moduleName}.entity.ts`);
   fs.writeFileSync(entityPath, generateEntityTemplate(moduleName));
   createdFiles.push(entityPath);
-
-  // 2. Generate Value Objects (if needed)
   const valueObjectPath = path.join(srcPath, "domain/value_objects", `${moduleName}.value-object.ts`);
   fs.writeFileSync(valueObjectPath, generateValueObjectTemplate(moduleName));
   createdFiles.push(valueObjectPath);
-
-  // 3. Generate Repository Interface
   if (!skipRepository) {
     const repoInterfacePath = path.join(srcPath, "domain/repositories", `${moduleName}.repository.ts`);
     fs.writeFileSync(repoInterfacePath, generateRepositoryInterfaceTemplate(moduleName, actions));
     createdFiles.push(repoInterfacePath);
-
-    // Generate Repository Implementation
     const repoImplPath = path.join(srcPath, "infrastructure/repositories", `${moduleName}.repository.impl.ts`);
     fs.writeFileSync(repoImplPath, generateRepositoryImplTemplate(moduleName, actions));
     createdFiles.push(repoImplPath);
   }
-
-  // 4. Generate DTOs
   const dtoPath = path.join(srcPath, "application/dto", `${moduleName}.dto.ts`);
   fs.writeFileSync(dtoPath, generateDtoTemplate(moduleName, actions));
   createdFiles.push(dtoPath);
-
-  // 5. Generate Service (Application Layer)
   if (!skipService) {
     const servicePath = path.join(srcPath, "application/services", `${moduleName}.service.ts`);
     fs.writeFileSync(servicePath, generateServiceTemplate(moduleName, actions));
     createdFiles.push(servicePath);
   }
-
-  // 6. Generate Controller
   if (!skipController) {
     const controllerPath = path.join(srcPath, "interfaces/http", `${moduleName}.controller.ts`);
     fs.writeFileSync(controllerPath, generateControllerTemplate(moduleName, actions));
     createdFiles.push(controllerPath);
-
-    // Generate Routes
     const routesPath = path.join(srcPath, "interfaces/http", `${moduleName}.routes.ts`);
     fs.writeFileSync(routesPath, generateRoutesTemplate(moduleName, actions));
     createdFiles.push(routesPath);
   }
-
-  // Print created files
-  console.log(`✅ Generated ${moduleName} module:`);
-  createdFiles.forEach(file => {
+  console.log(`\u2705 Generated ${moduleName} module:`);
+  createdFiles.forEach((file) => {
     const relativePath = path.relative(baseDir, file);
     console.log(`   create  ${relativePath}`);
   });
 }
-
-// Template Functions
-function generateEntityTemplate(moduleName: string): string {
+function generateEntityTemplate(moduleName) {
   const className = toPascalCase(moduleName);
-  return `// Created at: ${new Date().toISOString()}
+  return `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 export class ${className}Entity {
@@ -199,10 +155,9 @@ export class ${className}Entity {
 }
 `;
 }
-
-function generateValueObjectTemplate(moduleName: string): string {
+function generateValueObjectTemplate(moduleName) {
   const className = toPascalCase(moduleName);
-  return `// Created at: ${new Date().toISOString()}
+  return `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 export class ${className}ValueObject {
@@ -222,29 +177,31 @@ export class ${className}ValueObject {
 }
 `;
 }
-
-function generateRepositoryInterfaceTemplate(moduleName: string, actions: string[]): string {
+function generateRepositoryInterfaceTemplate(moduleName, actions) {
   const className = toPascalCase(moduleName);
   const entityName = `${className}Entity`;
-  
-  let methods = '';
-  if (actions.includes('index')) {
-    methods += `  findAll(): Promise<${entityName}[]>;\n`;
+  let methods = "";
+  if (actions.includes("index")) {
+    methods += `  findAll(): Promise<${entityName}[]>;
+`;
   }
-  if (actions.includes('show')) {
-    methods += `  findById(id: string): Promise<${entityName} | null>;\n`;
+  if (actions.includes("show")) {
+    methods += `  findById(id: string): Promise<${entityName} | null>;
+`;
   }
-  if (actions.includes('create')) {
-    methods += `  create(entity: Omit<${entityName}, 'id' | 'createdAt' | 'updatedAt'>): Promise<${entityName}>;\n`;
+  if (actions.includes("create")) {
+    methods += `  create(entity: Omit<${entityName}, 'id' | 'createdAt' | 'updatedAt'>): Promise<${entityName}>;
+`;
   }
-  if (actions.includes('update')) {
-    methods += `  update(id: string, data: Partial<${entityName}>): Promise<${entityName} | null>;\n`;
+  if (actions.includes("update")) {
+    methods += `  update(id: string, data: Partial<${entityName}>): Promise<${entityName} | null>;
+`;
   }
-  if (actions.includes('destroy')) {
-    methods += `  delete(id: string): Promise<boolean>;\n`;
+  if (actions.includes("destroy")) {
+    methods += `  delete(id: string): Promise<boolean>;
+`;
   }
-
-  return `// Created at: ${new Date().toISOString()}
+  return `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 import { ${entityName} } from '../entities/${moduleName}.entity';
@@ -253,13 +210,11 @@ export interface ${className}Repository {
 ${methods}}
 `;
 }
-
-function generateRepositoryImplTemplate(moduleName: string, actions: string[]): string {
+function generateRepositoryImplTemplate(moduleName, actions) {
   const className = toPascalCase(moduleName);
   const entityName = `${className}Entity`;
-  
-  let methods = '';
-  if (actions.includes('index')) {
+  let methods = "";
+  if (actions.includes("index")) {
     methods += `
   async findAll(): Promise<${entityName}[]> {
     // TODO: Implement database query
@@ -267,7 +222,7 @@ function generateRepositoryImplTemplate(moduleName: string, actions: string[]): 
   }
 `;
   }
-  if (actions.includes('show')) {
+  if (actions.includes("show")) {
     methods += `
   async findById(id: string): Promise<${entityName} | null> {
     // TODO: Implement database query
@@ -275,7 +230,7 @@ function generateRepositoryImplTemplate(moduleName: string, actions: string[]): 
   }
 `;
   }
-  if (actions.includes('create')) {
+  if (actions.includes("create")) {
     methods += `
   async create(data: Omit<${entityName}, 'id' | 'createdAt' | 'updatedAt'>): Promise<${entityName}> {
     // TODO: Implement database insert
@@ -283,7 +238,7 @@ function generateRepositoryImplTemplate(moduleName: string, actions: string[]): 
   }
 `;
   }
-  if (actions.includes('update')) {
+  if (actions.includes("update")) {
     methods += `
   async update(id: string, data: Partial<${entityName}>): Promise<${entityName} | null> {
     // TODO: Implement database update
@@ -291,7 +246,7 @@ function generateRepositoryImplTemplate(moduleName: string, actions: string[]): 
   }
 `;
   }
-  if (actions.includes('destroy')) {
+  if (actions.includes("destroy")) {
     methods += `
   async delete(id: string): Promise<boolean> {
     // TODO: Implement database delete
@@ -299,8 +254,7 @@ function generateRepositoryImplTemplate(moduleName: string, actions: string[]): 
   }
 `;
   }
-
-  return `// Created at: ${new Date().toISOString()}
+  return `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 import { ${className}Repository } from '../../domain/repositories/${moduleName}.repository';
@@ -309,31 +263,26 @@ import { ${entityName} } from '../../domain/entities/${moduleName}.entity';
 export class ${className}RepositoryImpl implements ${className}Repository {${methods}}
 `;
 }
-
-function generateDtoTemplate(moduleName: string, actions: string[]): string {
+function generateDtoTemplate(moduleName, actions) {
   const className = toPascalCase(moduleName);
-  
-  let dtos = `// Created at: ${new Date().toISOString()}
+  let dtos = `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 `;
-
-  if (actions.includes('create')) {
+  if (actions.includes("create")) {
     dtos += `export interface Create${className}Dto {
   // Add your create DTO properties here
 }
 
 `;
   }
-
-  if (actions.includes('update')) {
+  if (actions.includes("update")) {
     dtos += `export interface Update${className}Dto {
   // Add your update DTO properties here
 }
 
 `;
   }
-
   dtos += `export interface ${className}ResponseDto {
   id: string;
   createdAt: string;
@@ -341,29 +290,26 @@ function generateDtoTemplate(moduleName: string, actions: string[]): string {
   // Add your response DTO properties here
 }
 `;
-
   return dtos;
 }
-
-function generateServiceTemplate(moduleName: string, actions: string[]): string {
+function generateServiceTemplate(moduleName, actions) {
   const className = toPascalCase(moduleName);
-  
-  let methods = '';
-  if (actions.includes('index')) {
+  let methods = "";
+  if (actions.includes("index")) {
     methods += `
   async findAll() {
     return await this.${moduleName}Repository.findAll();
   }
 `;
   }
-  if (actions.includes('show')) {
+  if (actions.includes("show")) {
     methods += `
   async findById(id: string) {
     return await this.${moduleName}Repository.findById(id);
   }
 `;
   }
-  if (actions.includes('create')) {
+  if (actions.includes("create")) {
     methods += `
   async create(data: Create${className}Dto) {
     // TODO: Add business logic validation
@@ -371,7 +317,7 @@ function generateServiceTemplate(moduleName: string, actions: string[]): string 
   }
 `;
   }
-  if (actions.includes('update')) {
+  if (actions.includes("update")) {
     methods += `
   async update(id: string, data: Update${className}Dto) {
     // TODO: Add business logic validation
@@ -379,15 +325,14 @@ function generateServiceTemplate(moduleName: string, actions: string[]): string 
   }
 `;
   }
-  if (actions.includes('destroy')) {
+  if (actions.includes("destroy")) {
     methods += `
   async delete(id: string) {
     return await this.${moduleName}Repository.delete(id);
   }
 `;
   }
-
-  return `// Created at: ${new Date().toISOString()}
+  return `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 import { ${className}Repository } from '../../domain/repositories/${moduleName}.repository';
@@ -398,12 +343,10 @@ export class ${className}Service {
 ${methods}}
 `;
 }
-
-function generateControllerTemplate(moduleName: string, actions: string[]): string {
+function generateControllerTemplate(moduleName, actions) {
   const className = toPascalCase(moduleName);
-  
-  let methods = '';
-  if (actions.includes('index')) {
+  let methods = "";
+  if (actions.includes("index")) {
     methods += `
   async index(req: Request, res: Response) {
     try {
@@ -415,7 +358,7 @@ function generateControllerTemplate(moduleName: string, actions: string[]): stri
   }
 `;
   }
-  if (actions.includes('show')) {
+  if (actions.includes("show")) {
     methods += `
   async show(req: Request, res: Response) {
     try {
@@ -431,7 +374,7 @@ function generateControllerTemplate(moduleName: string, actions: string[]): stri
   }
 `;
   }
-  if (actions.includes('create')) {
+  if (actions.includes("create")) {
     methods += `
   async create(req: Request, res: Response) {
     try {
@@ -443,7 +386,7 @@ function generateControllerTemplate(moduleName: string, actions: string[]): stri
   }
 `;
   }
-  if (actions.includes('update')) {
+  if (actions.includes("update")) {
     methods += `
   async update(req: Request, res: Response) {
     try {
@@ -459,7 +402,7 @@ function generateControllerTemplate(moduleName: string, actions: string[]): stri
   }
 `;
   }
-  if (actions.includes('destroy')) {
+  if (actions.includes("destroy")) {
     methods += `
   async destroy(req: Request, res: Response) {
     try {
@@ -475,8 +418,7 @@ function generateControllerTemplate(moduleName: string, actions: string[]): stri
   }
 `;
   }
-
-  return `// Created at: ${new Date().toISOString()}
+  return `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 import { Request, Response } from 'express';
@@ -487,28 +429,30 @@ export class ${className}Controller {
 ${methods}}
 `;
 }
-
-function generateRoutesTemplate(moduleName: string, actions: string[]): string {
+function generateRoutesTemplate(moduleName, actions) {
   const className = toPascalCase(moduleName);
-  
-  let routes = '';
-  if (actions.includes('index')) {
-    routes += `router.get('/', ${moduleName}Controller.index.bind(${moduleName}Controller));\n`;
+  let routes = "";
+  if (actions.includes("index")) {
+    routes += `router.get('/', ${moduleName}Controller.index.bind(${moduleName}Controller));
+`;
   }
-  if (actions.includes('show')) {
-    routes += `router.get('/:id', ${moduleName}Controller.show.bind(${moduleName}Controller));\n`;
+  if (actions.includes("show")) {
+    routes += `router.get('/:id', ${moduleName}Controller.show.bind(${moduleName}Controller));
+`;
   }
-  if (actions.includes('create')) {
-    routes += `router.post('/', ${moduleName}Controller.create.bind(${moduleName}Controller));\n`;
+  if (actions.includes("create")) {
+    routes += `router.post('/', ${moduleName}Controller.create.bind(${moduleName}Controller));
+`;
   }
-  if (actions.includes('update')) {
-    routes += `router.put('/:id', ${moduleName}Controller.update.bind(${moduleName}Controller));\n`;
+  if (actions.includes("update")) {
+    routes += `router.put('/:id', ${moduleName}Controller.update.bind(${moduleName}Controller));
+`;
   }
-  if (actions.includes('destroy')) {
-    routes += `router.delete('/:id', ${moduleName}Controller.destroy.bind(${moduleName}Controller));\n`;
+  if (actions.includes("destroy")) {
+    routes += `router.delete('/:id', ${moduleName}Controller.destroy.bind(${moduleName}Controller));
+`;
   }
-
-  return `// Created at: ${new Date().toISOString()}
+  return `// Created at: ${(/* @__PURE__ */ new Date()).toISOString()}
 // Creator: create-ddd-app
 
 import { Router } from 'express';
@@ -528,17 +472,10 @@ ${routes}
 export default router;
 `;
 }
-
-// Helper function
-function toPascalCase(str: string): string {
+function toPascalCase(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
-
-// Export types for library usage
-export type { GeneratorOptions };
-
-// Main library interface
-export const DDD = {
+var DDD = {
   generateProject,
   generateModule,
   setupDDD,
@@ -547,6 +484,12 @@ export const DDD = {
     toPascalCase
   }
 };
-
-// Default export
-export default DDD;
+var index_default = DDD;
+export {
+  DDD,
+  index_default as default,
+  generateModule,
+  generateProject,
+  setupDDD
+};
+//# sourceMappingURL=index.js.map

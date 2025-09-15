@@ -7,7 +7,7 @@ const program = new Command();
 program
   .name("create-ddd-app")
   .description("DDD project generator for Node.js with HMVC-style usage")
-  .version("1.1.0");
+  .version("1.3.0");
 
 // New project command
 program

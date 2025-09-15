@@ -78,18 +78,51 @@ function generateProject(name) {
   }
   console.log(`\u2705 Project ${name} generated successfully!`);
 }
+function setupDDDStructure(baseDir) {
+  const structure = [
+    "domain/entities",
+    "domain/value_objects",
+    "domain/repositories",
+    "domain/events",
+    "application/dto",
+    "application/services",
+    "infrastructure/repositories",
+    "infrastructure/db",
+    "infrastructure/redis",
+    "infrastructure/messaging",
+    "infrastructure/config",
+    "interfaces/http",
+    "interfaces/graphql",
+    "interfaces/cli",
+    "shared/errors",
+    "shared/utils",
+    "shared/constants"
+  ];
+  structure.forEach((dir) => {
+    const fullPath = import_path.default.join(baseDir, dir);
+    if (!import_fs.default.existsSync(fullPath)) {
+      import_fs.default.mkdirSync(fullPath, { recursive: true });
+    }
+  });
+}
 function generateModule(moduleName, options = {}) {
-  const baseDir = process.cwd();
   const {
     actions = ["index", "show", "create", "update", "destroy"],
     skipController = false,
     skipService = false,
-    skipRepository = false
+    skipRepository = false,
+    outputDir
   } = options;
-  const srcPath = import_path.default.join(baseDir, "src");
+  const baseDir = outputDir ? import_path.default.resolve(outputDir) : process.cwd();
+  const srcPath = outputDir ? baseDir : import_path.default.join(baseDir, "src");
   if (!import_fs.default.existsSync(srcPath)) {
-    console.log("\u274C Not in a DDD project directory. Run 'create-ddd-app new <project-name>' first.");
-    return;
+    if (outputDir) {
+      console.log(`\u{1F4C1} Creating DDD structure at ${srcPath}`);
+      setupDDDStructure(srcPath);
+    } else {
+      console.log("\u274C Not in a DDD project directory. Run 'create-ddd-app new <project-name>' first or specify outputDir.");
+      return;
+    }
   }
   const createdFiles = [];
   const entityPath = import_path.default.join(srcPath, "domain/entities", `${moduleName}.entity.ts`);
@@ -467,7 +500,7 @@ function toPascalCase(str) {
 
 // src/cli.ts
 var program = new import_commander.Command();
-program.name("create-ddd-app").description("DDD project generator for Node.js with HMVC-style usage").version("1.1.0");
+program.name("create-ddd-app").description("DDD project generator for Node.js with HMVC-style usage").version("1.3.0");
 program.command("new <projectName>").description("Generate a new DDD structured project").action((projectName) => {
   generateProject(projectName);
 });

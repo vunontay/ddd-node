@@ -3,12 +3,11 @@
 [![npm version](https://badge.fury.io/js/create-ddd-app.svg)](https://www.npmjs.com/package/create-ddd-app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A powerful CLI tool to scaffold Node.js projects with Domain-Driven Design (DDD) architecture structure. Inspired by hmvc-rails, this tool provides an easy way to generate DDD modules with a Rails-like developer experience.
+A powerful CLI tool to scaffold Node.js projects with Domain-Driven Design (DDD) architecture structure. This tool provides an easy way to generate DDD modules with a Rails-like developer experience.
 
 ## 🚀 Features
 
 - **Quick Project Scaffolding**: Generate a complete DDD project structure in seconds
-- **HMVC-style Module Generation**: Generate DDD modules like hmvc-rails
 - **Domain-Driven Design Structure**: Follows DDD architectural patterns
 - **TypeScript Ready**: Built with TypeScript support out of the box
 - **Flexible Options**: Customize generated modules with various options
@@ -28,6 +27,12 @@ npm install -g create-ddd-app
 npx create-ddd-app new my-project
 ```
 
+### Library Installation (Programmatic Usage)
+
+```bash
+npm install create-ddd-app
+```
+
 ## 🎯 Usage
 
 ### Create a New DDD Project
@@ -41,7 +46,7 @@ create-ddd-app new <project-name>
 create-ddd-app new my-awesome-api
 ```
 
-### Generate DDD Modules (HMVC-style)
+### Generate DDD Modules
 
 #### Default Generator
 
@@ -123,6 +128,131 @@ create-ddd-app generate user --actions index,show --skip-controller
 create-ddd-app --help
 create-ddd-app generate --help
 ```
+
+## 📚 Library Usage (Programmatic)
+
+You can also use `create-ddd-app` as a library in your Node.js applications:
+
+### ESM (ES Modules)
+
+```javascript
+import { generateProject, generateModule, setupDDD, DDD } from 'create-ddd-app';
+
+// Generate a new DDD project
+generateProject('my-api');
+
+// Generate a user module with default actions
+generateModule('user');
+
+// Generate with custom options
+generateModule('product', {
+  actions: ['index', 'show'],
+  skipController: true
+});
+
+// Using the DDD object
+DDD.generateProject('another-project');
+DDD.generateModule('order', { actions: ['create', 'update'] });
+```
+
+### CommonJS
+
+```javascript
+const { generateProject, generateModule, setupDDD, DDD } = require('create-ddd-app');
+
+// Generate a new DDD project
+generateProject('my-api');
+
+// Generate a user module
+generateModule('user', {
+  actions: ['index', 'show', 'create'],
+  skipController: false
+});
+```
+
+### In-Project Usage (Integration với project hiện tại)
+
+Bạn có thể import library vào file `app.js`, `server.js`, hoặc `index.js` của project hiện tại:
+
+```javascript
+// app.js hoặc server.js
+import { setupDDD, generateModule } from 'create-ddd-app';
+
+// 1. Setup DDD structure trong project hiện tại
+setupDDD('./src'); // Tạo folder structure tại ./src
+
+// 2. Generate modules trong project
+generateModule('user', { outputDir: './src' });
+generateModule('product', { 
+  outputDir: './src',
+  actions: ['index', 'show'],
+  skipController: true 
+});
+
+console.log('✅ DDD modules generated!');
+```
+
+**Kết quả:**
+```
+your-project/
+├── app.js                    # File hiện tại của bạn
+├── package.json
+└── src/                      # DDD structure được tạo
+    ├── domain/
+    │   ├── entities/
+    │   │   ├── user.entity.ts
+    │   │   └── product.entity.ts
+    │   └── repositories/
+    └── application/
+        └── services/
+            ├── user.service.ts
+            └── product.service.ts
+```
+
+### TypeScript
+
+```typescript
+import { 
+  generateProject, 
+  generateModule, 
+  setupDDD,
+  DDD,
+  type GeneratorOptions 
+} from 'create-ddd-app';
+
+// Type-safe options
+const options: GeneratorOptions = {
+  actions: ['index', 'show'],
+  skipController: true,
+  skipService: false,
+  skipRepository: false,
+  outputDir: './src' // Target directory
+};
+
+generateProject('my-typed-api');
+generateModule('user', options);
+```
+
+### Library API
+
+#### `generateProject(name: string): void`
+Creates a new DDD project structure.
+
+#### `setupDDD(targetDir?: string): void`
+Sets up DDD folder structure in existing project (default: `'./src'`).
+
+#### `generateModule(moduleName: string, options?: GeneratorOptions): void`
+Generates a complete DDD module.
+
+**Options:**
+- `actions?: string[]` - Actions to generate (default: `['index', 'show', 'create', 'update', 'destroy']`)
+- `skipController?: boolean` - Skip generating controller (default: `false`)
+- `skipService?: boolean` - Skip generating service (default: `false`)  
+- `skipRepository?: boolean` - Skip generating repository (default: `false`)
+- `outputDir?: string` - Target directory for generation (default: current directory)
+
+#### `DDD` Object
+Main library interface with all functions and utilities.
 
 ## 📁 Generated Project Structure
 
@@ -341,8 +471,20 @@ If you encounter any issues or have questions, please file an issue on the [GitH
 
 ## 📈 Changelog
 
-### v1.1.0 (Latest)
-- Added HMVC-style module generation (inspired by hmvc-rails)
+### v1.3.0 (Latest)
+- **🏠 In-Project Usage**: Import library vào project hiện tại và generate DDD modules
+- **📁 setupDDD Function**: Setup DDD structure trong project có sẵn
+- **🎯 outputDir Option**: Specify target directory cho module generation
+- **🔧 Enhanced Library**: Better integration với existing projects
+
+### v1.2.0
+- **🚀 Library Usage**: Can now be used as a Node.js library (programmatic usage)
+- **📦 Dual Package**: Supports both ESM and CommonJS imports
+- **🔧 TypeScript Support**: Full TypeScript definitions for library usage
+- **📚 API Documentation**: Complete library API documentation
+- **⚙️ Better Build**: Improved build system with separate CLI and library builds
+
+### v1.1.0
 - New `generate` and `module` commands
 - Support for custom actions (index, show, create, update, destroy)
 - Skip options for components (--skip-controller, --skip-service, etc.)

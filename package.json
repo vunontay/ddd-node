@@ -1,6 +1,6 @@
 {
   "name": "create-ddd-app",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "description": "A CLI to scaffold Node.js projects with Domain-Driven Design structure",
   "license": "MIT",
   "author": "vunontay <vunontay@gmail.com>",
@@ -14,8 +14,16 @@
   },
 
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
 
   "bin": {
     "ddd": "dist/cli.js"
@@ -27,7 +35,7 @@
 
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsup src/cli.ts --format esm,cjs --dts",
+    "build": "tsup",
     "dev": "tsup src/cli.ts --watch --onSuccess \"node dist/cli.js\"",
     "start": "node dist/cli.js",
     "prepare": "npm run build",
