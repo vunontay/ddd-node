@@ -1,16 +1,16 @@
 {
-  "name": "ddd-node",
+  "name": "@vunontay/ddd-node",
   "version": "1.0.0",
   "description": "A CLI to scaffold Node.js projects with Domain-Driven Design structure",
   "license": "MIT",
-  "author": "Your Name <you@example.com>",
-  "homepage": "https://github.com/yourname/ddd-node#readme",
+  "author": "vunontay <vunontay@gmail.com>",
+  "homepage": "https://github.com/vunontay/ddd-node",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourname/ddd-node.git"
+    "url": "git+https://github.com/vunontay/ddd-node.git"
   },
   "bugs": {
-    "url": "https://github.com/yourname/ddd-node/issues"
+    "url": "https://github.com/vunontay/ddd-node/issues"
   },
 
   "type": "module",

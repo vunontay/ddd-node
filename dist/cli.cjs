@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -5,10 +6,6 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -25,16 +22,13 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/cli.ts
+var import_commander = require("commander");
 
 // src/index.ts
-var index_exports = {};
-__export(index_exports, {
-  generateProject: () => generateProject
-});
-module.exports = __toCommonJS(index_exports);
-var import_fs = __toESM(require("fs"));
-var import_path = __toESM(require("path"));
+var import_fs = __toESM(require("fs"), 1);
+var import_path = __toESM(require("path"), 1);
 function generateProject(name) {
   const baseDir = import_path.default.join(process.cwd(), name);
   const structure = [
@@ -84,8 +78,12 @@ function generateProject(name) {
   }
   console.log(`\u2705 Project ${name} generated successfully!`);
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  generateProject
+
+// src/cli.ts
+var program = new import_commander.Command();
+program.name("ddd").description("DDD project generator for Node.js").version("1.0.0");
+program.command("new <projectName>").description("Generate a new DDD structured project").action((projectName) => {
+  generateProject(projectName);
 });
-//# sourceMappingURL=index.js.map
+program.parse(process.argv);
+//# sourceMappingURL=cli.cjs.map
